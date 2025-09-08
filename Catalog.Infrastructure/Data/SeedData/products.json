@@ -1,0 +1,50 @@
+[
+  {
+    "Id": "507f1f77bcf86cd799439031",
+    "Name": "iPhone 15",
+    "Description": "Latest Apple smartphone with advanced camera system and A17 chip.",
+    "Summary": "Flagship Apple smartphone",
+    "Price": 1199.99,
+    "ImageFile": "iphone15.png",
+    "productType": {
+      "Id": "507f1f77bcf86cd799439021",
+      "Name": "Electronics"
+    },
+    "productBrand": {
+      "Id": "507f1f77bcf86cd799439011",
+      "Name": "Apple"
+    }
+  },
+  {
+    "Id": "507f1f77bcf86cd799439032",
+    "Name": "Adidas Ultraboost",
+    "Description": "High-performance running shoes with responsive cushioning.",
+    "Summary": "Comfortable running shoes",
+    "Price": 180.50,
+    "ImageFile": "ultraboost.png",
+    "productType": {
+      "Id": "507f1f77bcf86cd799439022",
+      "Name": "Clothing"
+    },
+    "productBrand": {
+      "Id": "507f1f77bcf86cd799439012",
+      "Name": "Adidas"
+    }
+  },
+  {
+    "Id": "507f1f77bcf86cd799439033",
+    "Name": "Samsung 65\" QLED TV",
+    "Description": "4K UHD Smart TV with Quantum Dot display and HDR.",
+    "Summary": "Premium QLED TV",
+    "Price": 1399.00,
+    "ImageFile": "samsung-qled.png",
+    "productType": {
+      "Id": "507f1f77bcf86cd799439021",
+      "Name": "Electronics"
+    },
+    "productBrand": {
+      "Id": "507f1f77bcf86cd799439014",
+      "Name": "Samsung"
+    }
+  }
+]

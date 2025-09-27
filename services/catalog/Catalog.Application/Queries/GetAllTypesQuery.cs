@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 
 namespace Catalog.Application.Queries
 {
-    public class GetAllBrandQuery: IRequest<IList<BrandResponsDto>>
+    public class GetAllTypesQuery:IRequest<IList<TypeResponsDto>>
     {
-
     }
 }

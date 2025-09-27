@@ -12,6 +12,10 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["services/catalog/Calalog.API/Calalog.API.csproj", "services/catalog/Calalog.API/"]
+COPY ["services/catalog/Calalog.Application/Calalog.Application.csproj", "services/catalog/Calalog.Application"]
+COPY ["services/catalog/Calalog.Core/Calalog.Core.csproj", "services/catalog/Calalog.Core"]
+COPY ["services/catalog/Calalog.Core/Calalog.Infrastructure.csproj", "services/catalog/Calalog.Infrastructure"]
+COPY services/catalog/Catlog.infrastructure/data/SeedData src/services/catalog/Catlog.infrastructure/data/SeedData
 RUN dotnet restore "./services/catalog/Calalog.API/Calalog.API.csproj"
 COPY . .
 WORKDIR "/src/services/catalog/Calalog.API"

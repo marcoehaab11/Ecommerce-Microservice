@@ -14,7 +14,7 @@ namespace Catalog.Infrastructure.Data.Contexts
         public static async Task SeedDataAsync (IMongoCollection<Product> productcollection)
         {
             var hasproducts = await productcollection.Find(p => true).AnyAsync();
-           if (!hasproducts)
+           if (hasproducts)
                 return;
 
            var filepath = Path.Combine("Data", "SeedData", "products.json");
@@ -25,7 +25,7 @@ namespace Catalog.Infrastructure.Data.Contexts
             var productData = await File.ReadAllTextAsync(filepath);
             var products = JsonSerializer.Deserialize<IEnumerable<Product>>(productData);
 
-            if(products?.Any() != true)
+            if(products?.Any() is true)
             {
                 await productcollection.InsertManyAsync(products);
             }

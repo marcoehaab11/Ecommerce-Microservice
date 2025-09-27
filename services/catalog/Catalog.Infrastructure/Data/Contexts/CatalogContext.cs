@@ -25,6 +25,11 @@ namespace Catalog.Infrastructure.Data.Contexts
             Products = database.GetCollection<Product>(configuration["DatabaseSettings:ProductsCollection"]);
             Brands = database.GetCollection<ProductBrand>(configuration["DatabaseSettings:BrandsCollection"]);
             Types = database.GetCollection<ProductType>(configuration["DatabaseSettings:TypesCollection"]);
+
+
+            _=BrandContextSeed.SeedDataAsync(Brands);
+            _=TypeContextSeed.SeedDataAsync(Types);
+            _=CatalogContextSeed.SeedDataAsync(Products);
         }
 
     }

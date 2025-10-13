@@ -9,14 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Basket.Application\Basket.Application.csproj" />
-    <ProjectReference Include="..\Basket.Infrastructure\Basket.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Discount.Infrastructure\Discount.Infrastructure.csproj" />
+    <ProjectReference Include="..\Discount.Application\Discount.Application.csproj" />
   </ItemGroup>
 
 </Project>

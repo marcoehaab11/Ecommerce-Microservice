@@ -15,13 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Handler\Commands\" />
-    <Folder Include="Handler\Queries\" />
-    <Folder Include="Command\" />
-    <Folder Include="Query\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
     <PackageReference Include="MediatR" Version="13.0.0" />

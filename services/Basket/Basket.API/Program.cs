@@ -1,4 +1,5 @@
 using Basket.Application.Commands;
+using Basket.Application.GrpcServices;
 using Basket.Application.Mapper;
 using Basket.Core.Repositories;
 using Basket.Infrastructure.Repositories;
@@ -20,6 +21,11 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(Assembly.G
     , Assembly.GetAssembly(typeof(CreateShoppingCartCommand))));
 
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
+builder.Services.AddScoped<DiscountGrpcService>();
+builder.Services.AddGrpcClient<Discount.Grpc.Protos.DiscountProtoService.DiscountProtoServiceClient>(o =>
+{
+    o.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]);
+});
 
 builder.Services.AddSwaggerGen();
 

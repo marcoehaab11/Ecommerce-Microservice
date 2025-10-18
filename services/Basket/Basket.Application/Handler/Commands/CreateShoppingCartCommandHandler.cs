@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Basket.Application.Commands;
+using Basket.Application.GrpcServices;
 using Basket.Application.Responses;
 using Basket.Core.Repositories;
 using MediatR;
@@ -15,17 +16,28 @@ namespace Basket.Application.Handler.Commands
     {
         IBasketRepository _basketRepository;
         IMapper _mapper;
-
+        private readonly DiscountGrpcService _discountGrpcService;
         public CreateShoppingCartCommandHandler(
             IMapper mapper,
-            IBasketRepository basketRepository)
+            IBasketRepository basketRepository,
+            DiscountGrpcService discountGrpcService)
         {
             _mapper=mapper;
             _basketRepository=basketRepository;
+            _discountGrpcService=discountGrpcService;
         }
 
         public async Task<ShoppingCartResponse> Handle(CreateShoppingCartCommand request, CancellationToken cancellationToken)
         {
+            foreach (var item in request.Items)
+            {
+                var coupon = await _discountGrpcService.GetDiscount(item.ProductName);
+                if (coupon is not null)
+                {
+                    item.Price -= coupon.Amount;
+                }
+            }
+
             var shoppingCart =await _basketRepository.UpdateBasket(new Core.Entites.ShoppingCart
             {
                 UserName = request.UserName,

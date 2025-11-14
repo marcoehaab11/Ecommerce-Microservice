@@ -11,10 +11,12 @@ namespace Catalog.API.Controllers
     public class CatalogController : BaseApiController
     {
         private readonly IMediator _mediator;
+        private readonly ILogger<CatalogController> _logger;
 
-        public CatalogController(IMediator mediator)
+        public CatalogController(IMediator mediator, ILogger<CatalogController> logger)
         {
-            _mediator=mediator;
+            _mediator = mediator;
+            _logger = logger;
         }
 
 
@@ -26,6 +28,7 @@ namespace Catalog.API.Controllers
         {
             var query = new GetProductByIdQuery(id);
             var result = await _mediator.Send(query);
+            _logger.LogInformation("Product with id: {ProductId} featched", id);
             return Ok(result);
         }
 
@@ -37,6 +40,8 @@ namespace Catalog.API.Controllers
         {
             var query = new GetAllProductByTypeNameQuery(typeName);
             var result = await _mediator.Send(query);
+            _logger.LogInformation($"Product with Type: {typeName} featched");
+
             return Ok(result);
         }
 

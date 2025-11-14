@@ -5,12 +5,15 @@ using Basket.Core.Repositories;
 using Basket.Infrastructure.Repositories;
 using Catalog.Application.Mappers;
 using Catalog.Application.Queries;
+using Common.Logging;
+using MassTransit;
+using Serilog;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Host.UseSerilog(Logging.ConfigureLogger);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -28,6 +31,16 @@ builder.Services.AddGrpcClient<Discount.Grpc.Protos.DiscountProtoService.Discoun
 });
 
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddMassTransit(confg =>
+
+{
+    confg.UsingRabbitMq((ct, cfg) =>
+    {
+        cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+    });
+});
+builder.Services.AddMassTransitHostedService();
 
 builder.Services.AddApiVersioning(opt =>
 {

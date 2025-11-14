@@ -1,16 +1,19 @@
 using Catalog.Application.Handlers.Queries;
 using Catalog.Application.Mappers;
 using Catalog.Application.Queries;
+using Catalog.Application.Responses;
 using Catalog.Core.Repositories;
 using Catalog.Infrastructure.Data.Contexts;
-using Catalog.Application.Responses;
-using System.Reflection;
 using Catalog.Infrastructure.Repositories;
+using Common.Logging;
+using Serilog;
+using System.Reflection;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Host.UseSerilog(Logging.ConfigureLogger);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

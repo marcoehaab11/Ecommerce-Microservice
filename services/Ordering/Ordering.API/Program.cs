@@ -1,8 +1,13 @@
 using Asp.Versioning;
+using Common.Logging;
+using EventBus.Messages.Commons;
+using MassTransit;
 using Ordering.API.Extensions;
+using Ordering.Application.EventBusConsumer;
+using Ordering.Application.Extensions;
 using Ordering.Infrastruture.Data;
 using Ordering.Infrastruture.Extensions;
-using Ordering.Application.Extensions;
+using Serilog;
 namespace Ordering.API
 {
     public class Program
@@ -10,6 +15,7 @@ namespace Ordering.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.Host.UseSerilog(Logging.ConfigureLogger);
 
             // Add services to the container.
             builder.Services.AddApiVersioning(opt =>
@@ -39,6 +45,25 @@ namespace Ordering.API
 
             builder.Services.AddApplicationServices();
             builder.Services.AddInfraServices(builder.Configuration);
+
+            builder.Services.AddScoped<BasketOrderingConsumer>();
+            builder.Services.AddMassTransit(confg =>
+            {
+                //Mark this as Consumer
+                confg.AddConsumer<BasketOrderingConsumer>();
+                confg.UsingRabbitMq((ct, cfg) =>
+                {
+                    cfg.Host(builder.Configuration["EventBusSettings:HostAddress"]);
+
+                    //provide the queue name with consumer 
+                    cfg.ReceiveEndpoint(EventBusConstant.BasketCheckoutQueue, ept =>
+                    {
+                        ept.ConfigureConsumer<BasketOrderingConsumer>(ct);
+                    });
+                });
+            });
+            builder.Services.AddMassTransitHostedService();
+
             var app = builder.Build();
 
             app.MigrateDatabase<OrderDbContext>((context, services) =>

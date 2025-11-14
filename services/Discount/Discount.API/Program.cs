@@ -1,14 +1,17 @@
+using Common.Logging;
 using Discount.Application.Mapper;
 using Discount.Application.Query;
 using Discount.Core.Repositories;
 using Discount.Infrastructure.Extentions;
 using Discount.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Builder;
+using Serilog;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Host.UseSerilog(Logging.ConfigureLogger);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

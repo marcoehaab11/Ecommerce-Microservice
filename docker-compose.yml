@@ -15,6 +15,7 @@ services:
     - DatabaseSettings__ProductsCollection=Products
     - DatabaseSettings__BrandsCollection=Brands
     - DatabaseSettings__TypesCollection=Types
+    - "ElasticCongiuration__Uri=http://elasticsearch:9200"
 
   catalogdb:
     image: mongo
@@ -29,6 +30,7 @@ services:
     restart: always
     ports:
       - "6379:6379"
+
   discountdb:
     image: postgres:13-alpine
     container_name: discountdb
@@ -47,7 +49,6 @@ services:
         timeout: 5s
         retries: 5 
 
-
   orderdb:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: orderdb
@@ -65,6 +66,36 @@ services:
         interval: 10s
         timeout: 5s
         retries: 10
+  
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    container_name: elasticsearch
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+  kibana:
+      image: docker.elastic.co/kibana/kibana:8.14.3
+      container_name: kibana
+      environment:
+        - ELASTICSEARCH_URL=http://elasticsearch:9200
+      depends_on:
+        - elasticsearch
+      ports:
+        - "5601:5601"
+ 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    restart: always
+    ports:
+     - "5672:5672"
+     - "15672:15672"
 
   pgadmin:
       image: dpage/pgadmin4
@@ -73,8 +104,6 @@ services:
       environment:
         - PGADMIN_DEFAULT_EMAIL=admin@ecommerc.com
         - PGADMIN_DEFAULT_PASSWORD=Password1@
-
-
       ports:
           - "5050:80"
       depends_on:
@@ -91,11 +120,14 @@ services:
      - "8001:8000"
     depends_on:
       - basketdb
+      - rabbitmq
     environment:
     - ASPNETCORE_URLS=http://+:8000
     - CacheSettings__ConnectionString=basketdb:6379
     - "GrpcSettings__DiscountUrl=http://discount.api:8080"
-    
+    - "EventBusSettings__HostAddress=amqp://guest:guest@rabbitmq:5672"
+    - "ElasticCongiuration__Uri=http://elasticsearch:9200"
+
   portainer:
     image: portainer/portainer-ce
     container_name: portainer
@@ -114,7 +146,7 @@ services:
     environment:
         - ASPNETCORE_ENVIRONMENT=Development
         - DatabaseSettings__ConnectionString=Host=discountdb;Port=5432;Database=DiscountDb;Username=admin;Password=Password1@;Pooling=true
-
+        - "ElasticCongiuration__Uri=http://elasticsearch:9200"
     depends_on:
        discountdb:
          condition: service_healthy
@@ -130,14 +162,18 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8000
       - ConnectionStrings__OrderConnectionString=Server=orderdb,1433;Database=OrderDb;User Id=sa;Password=Marco111@;Encrypt=False;TrustServerCertificate=True;
+      - "EventBusSettings__HostAddress=amqp://guest:guest@rabbitmq:5672"
+      - "ElasticCongiuration__Uri=http://elasticsearch:9200"
 
     depends_on:
        - orderdb
     ports:
       - "8003:8000"
+
 volumes:
   catalogdb:
   portainer_data:
   postgres_data:
   pgadmin_data:
   orderdb_data:
+  elasticsearch-data:

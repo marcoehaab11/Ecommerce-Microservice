@@ -10,6 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+	  <PackageReference Include="MassTransit" Version="7.3.1" />
+	  <PackageReference Include="MassTransit.AspNetCore" Version="7.3.1" />
+	  <PackageReference Include="MassTransit.RabbitMQ" Version="7.3.1" />
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="MediatR" Version="13.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8">
@@ -23,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Infrstructure\Common.Logging\Common.Logging.csproj" />
     <ProjectReference Include="..\Ordering.Application\Ordering.Application.csproj" />
     <ProjectReference Include="..\Ordering.Infrastruture\Ordering.Infrastruture.csproj" />
   </ItemGroup>

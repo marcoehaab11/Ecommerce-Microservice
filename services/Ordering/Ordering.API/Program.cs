@@ -47,6 +47,7 @@ namespace Ordering.API
             builder.Services.AddInfraServices(builder.Configuration);
 
             builder.Services.AddScoped<BasketOrderingConsumer>();
+            builder.Services.AddScoped<BasketOrderingConsumerV2>();
             builder.Services.AddMassTransit(confg =>
             {
                 //Mark this as Consumer
@@ -59,6 +60,10 @@ namespace Ordering.API
                     cfg.ReceiveEndpoint(EventBusConstant.BasketCheckoutQueue, ept =>
                     {
                         ept.ConfigureConsumer<BasketOrderingConsumer>(ct);
+                    });
+                    cfg.ReceiveEndpoint(EventBusConstant.BasketCheckoutQueueV2, ept =>
+                    {
+                        ept.ConfigureConsumer<BasketOrderingConsumerV2>(ct);
                     });
                 });
             });

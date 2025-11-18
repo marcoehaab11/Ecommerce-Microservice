@@ -9,5 +9,6 @@ namespace EventBus.Messages.Commons
     public class EventBusConstant
     {
         public const string BasketCheckoutQueue = "Basketcheckout-queue";
+        public const string BasketCheckoutQueueV2 = "Basketcheckout-queue-v2";
     }
 }

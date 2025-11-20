@@ -170,6 +170,22 @@ services:
     ports:
       - "8003:8000"
 
+  ocelot.apigateway:
+    image: ${DOCKER_REGISTRY-}ocelotapigateway
+    build:
+      context: .
+      dockerfile: APIGateway/Ocelot.ApiGateway/Ocelot.ApiGateway/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - ordering.api
+      - discount.api
+      - basket.api
+      - catalog.api
+    ports:
+      - "8010:8080"
+
 volumes:
   catalogdb:
   portainer_data:
@@ -177,3 +193,4 @@ volumes:
   pgadmin_data:
   orderdb_data:
   elasticsearch-data:
+

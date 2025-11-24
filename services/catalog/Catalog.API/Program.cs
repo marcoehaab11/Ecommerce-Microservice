@@ -6,6 +6,9 @@ using Catalog.Core.Repositories;
 using Catalog.Infrastructure.Data.Contexts;
 using Catalog.Infrastructure.Repositories;
 using Common.Logging;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Serilog;
 using System.Reflection;
 
@@ -15,9 +18,59 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Host.UseSerilog(Logging.ConfigureLogger);
 
-builder.Services.AddControllers();
+// Enforce authorization globally via an MVC filter
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(new AuthorizeFilter());
+});
 builder.Services.AddEndpointsApiExplorer();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://host.docker.internal:9009";
+        options.RequireHttpsMetadata = true;
+
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = "https://host.docker.internal:9009",
+            ValidateAudience = true,
+            ValidAudience = "Catalog",
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.Zero   
+        };
+        //add this to docker host 
+        options.BackchannelHttpHandler = new System.Net.Http.HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogError("Authentication failed: {0}", context.Exception.Message);
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogInformation("Token validated for {0}", context.Principal.Identity.Name);
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+// Ensure authorization services are registered and require authenticated users by default
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+
 builder.Services.AddAutoMapper(typeof(ProductProfileMapper));
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly()
@@ -27,6 +80,15 @@ builder.Services.AddScoped<ICatalogContext, CatalogContext>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductBrand, ProductRepository>();
 builder.Services.AddScoped<IProductType, ProductRepository>();
+
+var userPolicy = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser()
+    .Build();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(new AuthorizeFilter(userPolicy));
+});
 
 builder.Services.AddApiVersioning(opt=>
 {
@@ -57,7 +119,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

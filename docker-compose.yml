@@ -1,4 +1,18 @@
 services:
+  reverseproxy:
+    container_name: nginxgateway
+    restart: always
+    build:
+      context: .
+      dockerfile: APIGateway/nginx/nginx.Dockerfile
+    depends_on:
+      - identityserver
+      - catalog.api
+      - basket.api
+      - discount.api
+      - ordering.api
+    ports:
+      - "44344:443" 
   catalog.api:
     image: ${DOCKER_REGISTRY-}catalogapi
     build:
@@ -8,6 +22,8 @@ services:
      - "8000:8000"
     depends_on:
       - catalogdb
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
     environment:
     - ASPNETCORE_URLS=http://+:8000
     - DatabaseSettings__ConnectionString=mongodb://catalogdb:27017
@@ -16,7 +32,9 @@ services:
     - DatabaseSettings__BrandsCollection=Brands
     - DatabaseSettings__TypesCollection=Types
     - "ElasticCongiuration__Uri=http://elasticsearch:9200"
-
+    - Auth__Authority="http://host.docker.internal:9009"
+    - Auth__RequireHttpsMetadata=false
+    - Auth__Audience=Catalog
   catalogdb:
     image: mongo
     ports:
@@ -179,12 +197,25 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
     depends_on:
+      - identityserver
       - ordering.api
       - discount.api
       - basket.api
       - catalog.api
     ports:
       - "8010:8080"
+
+  identityserver:
+    image: ${DOCKER_REGISTRY-}eshopidentity
+    container_name: IdentityServer
+    environment:
+          - ASPNETCORE_ENVIRONMENT=Development
+          - ASPNETCORE_URLS=http://+:9011
+    build:
+      context: .
+      dockerfile: Infrstructure/eShop.Identity/Dockerfile
+    ports:
+      - "9009:9009"
 
 volumes:
   catalogdb:
@@ -193,4 +224,5 @@ volumes:
   pgadmin_data:
   orderdb_data:
   elasticsearch-data:
+
 

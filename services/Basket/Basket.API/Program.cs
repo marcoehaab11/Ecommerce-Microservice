@@ -7,6 +7,9 @@ using Catalog.Application.Mappers;
 using Catalog.Application.Queries;
 using Common.Logging;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
@@ -30,7 +33,43 @@ builder.Services.AddGrpcClient<Discount.Grpc.Protos.DiscountProtoService.Discoun
 {
     o.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]);
 });
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "https://id-local.eshopping.com:44344";
+        options.RequireHttpsMetadata = true;
 
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = "https://id-local.eshopping.com:44344",
+            ValidateAudience = true,
+            ValidAudience = "Basket",
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.Zero
+        };
+        //add this to docker host 
+        options.BackchannelHttpHandler = new System.Net.Http.HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogError("Authentication failed: {0}", context.Exception.Message);
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogInformation("Token validated for {0}", context.Principal.Identity.Name);
+                return Task.CompletedTask;
+            }
+        };
+    });
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddMassTransit(confg =>
@@ -42,6 +81,14 @@ builder.Services.AddMassTransit(confg =>
     });
 });
 builder.Services.AddMassTransitHostedService();
+var userPolicy = new AuthorizationPolicyBuilder()
+    .RequireAuthenticatedUser()
+    .Build();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(new AuthorizeFilter(userPolicy));
+});
 
 builder.Services.AddApiVersioning(opt =>
 {
@@ -103,17 +150,34 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// BEFORE UseSwagger / routing
+app.Use((ctx, next) =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c=>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Basket.API v1");
-        c.SwaggerEndpoint("/swagger/v2/swagger.json", "Basket.API v2");
-    });
-}
+    if (ctx.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var p) && !string.IsNullOrEmpty(p))
+        ctx.Request.PathBase = p.ToString();   // e.g., "/catalog"
+    return next();
+});
 
+app.UseSwagger(c =>
+{
+    // Make the OpenAPI "servers" base path match the prefix so Try it out uses /catalog/...
+    c.PreSerializeFilters.Add((doc, req) =>
+    {
+        var prefix = req.Headers["X-Forwarded-Prefix"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(prefix))
+            doc.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+            { new() { Url = prefix } };
+    });
+});
+
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("v1/swagger.json", "Catalog.API v1"); // relative path (no leading '/')
+    c.RoutePrefix = "swagger";
+});
+
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

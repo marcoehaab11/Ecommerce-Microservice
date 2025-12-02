@@ -122,6 +122,9 @@
       ],
       "UpstreamPathTemplate": "/Basket/Checkout",
       "UpstreamHttpMethod": [ "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "EShoppingGatewayAuthSchema"
+      },"
       "RateLimitOptions": {
         "ClientWhitelist": [],
         "EnableRateLimiting": true,

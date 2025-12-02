@@ -14,12 +14,37 @@ public static class Config
     public static IEnumerable<ApiScope> ApiScopes =>
         new ApiScope[]
         {
-            new ApiScope("scope1"),
-            new ApiScope("scope2"),
+            new ApiScope("catalogapi.read"),
+            new ApiScope("catalogapi.write"),
+            new ApiScope("basketapi"),
+            new ApiScope("eshopgateway"),
         };
     public static IEnumerable<ApiResource> ApiResources =>
         new ApiResource[]
         {
+            new ApiResource("Catalog", "Catalog.API")
+            {
+                Scopes =
+                {
+                    "catalogapi.read",
+                    "catalogapi.write"
+                }
+            },
+             new ApiResource("Basket", "Basket.API")
+            {
+                Scopes =
+                {
+                    "basketapi"
+                }
+            },
+            new ApiResource("EshopGateway", "Eshop Gateway API")
+            {
+                Scopes =
+                {
+                    "eshopgateway",
+                    "basketapi"
+                }
+            }
         };
     public static IEnumerable<Client> Clients =>
         new Client[]
@@ -51,5 +76,31 @@ public static class Config
                 AllowOfflineAccess = true,
                 AllowedScopes = { "openid", "profile", "scope2" }
             },
+            new Client
+            {
+                ClientName="Catalog API Client",
+                ClientId ="calalogapiclient",
+                ClientSecrets =  { new Secret("49C1A7E1-0C79-4A09-A3D6-A37998FB86A0".Sha256()) },
+                AllowedGrantTypes =GrantTypes.ClientCredentials,
+                AllowedScopes = { "catalogapi.write", "catalogapi.read" }
+
+            },
+             new Client
+            {
+                ClientName="Basket API Client",
+                ClientId ="basketapiclient",
+                ClientSecrets =  { new Secret("49C1A7E1-0C79-5B09-A3D6-A37998FB86A0".Sha256()) },
+                AllowedGrantTypes =GrantTypes.ClientCredentials,
+                AllowedScopes = {   "eshopgateway", "basketapi" }
+
+            },
+             new Client
+             {
+                    ClientName="Eshop Gateway Client",
+                    ClientId ="eshopgatewayclient",
+                    ClientSecrets =  { new Secret("49C1A7E1-0C79-5B09-A3D7-W37998FB86A0".Sha256()) },
+                    AllowedGrantTypes =GrantTypes.ClientCredentials,
+                    AllowedScopes = {  "basketapi" }
+             }
         };
 }

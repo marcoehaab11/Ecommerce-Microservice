@@ -1,4 +1,5 @@
 ﻿using eShop.Identity;
+using Microsoft.AspNetCore.HttpOverrides;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -20,6 +21,14 @@ try
         .ConfigureServices()
         .ConfigurePipeline();
     
+    var forwardHeaderOptions = new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    };
+    forwardHeaderOptions.KnownNetworks.Clear();
+    forwardHeaderOptions.KnownProxies.Clear();
+    app.UseForwardedHeaders(forwardHeaderOptions);
+
     app.Run();
 }
 catch (Exception ex)

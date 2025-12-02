@@ -112,6 +112,31 @@ builder.Services.AddSwaggerGen(options =>
 );
 
 var app = builder.Build();
+// BEFORE UseSwagger / routing
+app.Use((ctx, next) =>
+{
+    if (ctx.Request.Headers.TryGetValue("X-Forwarded-Prefix", out var p) && !string.IsNullOrEmpty(p))
+        ctx.Request.PathBase = p.ToString();   // e.g., "/catalog"
+    return next();
+});
+
+app.UseSwagger(c =>
+{
+    // Make the OpenAPI "servers" base path match the prefix so Try it out uses /catalog/...
+    c.PreSerializeFilters.Add((doc, req) =>
+    {
+        var prefix = req.Headers["X-Forwarded-Prefix"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(prefix))
+            doc.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+            { new() { Url = prefix } };
+    });
+});
+
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("v1/swagger.json", "Catalog.API v1"); // relative path (no leading '/')
+    c.RoutePrefix = "swagger";
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
